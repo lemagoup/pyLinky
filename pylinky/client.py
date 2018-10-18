@@ -137,8 +137,9 @@ class LinkyClient(object):
         # Generate data
         for ordre, value in enumerate(data.get('data')):
             kwargs = {format_data: ordre * inc}
-            result.append({"time": ((start_date + relativedelta(**kwargs)).strftime(time_format)),
-                           "conso": (value.get('valeur') if value.get('valeur') > 0 else 0)})
+            if value != 0:
+                result.append({"time": ((start_date + relativedelta(**kwargs)).strftime(time_format)),
+                               "conso": (value.get('valeur') if value.get('valeur') > 0 else 0)})
 
         return result
 
@@ -148,20 +149,12 @@ class LinkyClient(object):
         self._get_httpsession()
 
         today = datetime.date.today()
-        # last 2 days
-        self._data["hourly"] = self._get_data_per_hour((today - relativedelta(days=1)).strftime("%d/%m/%Y"),
+        # Get last 7 days per hour and per day
+        self._data["hourly"] = self._get_data_per_hour((today - relativedelta(days=7)).strftime("%d/%m/%Y"),
                                                      today.strftime("%d/%m/%Y"))
 
-        # last 30 days
-        self._data["daily"] = self._get_data_per_day((today - relativedelta(days=30)).strftime("%d/%m/%Y"),
-                                                       (today - relativedelta(days=1)).strftime("%d/%m/%Y"))
-
-        # 12 last month
-        self._data["monthly"] = self._get_data_per_month((today - relativedelta(months=12)).strftime("%d/%m/%Y"),
-                                                         (today - relativedelta(days=1)).strftime("%d/%m/%Y"))
-
-        # 12 last month
-        self._data["yearly"] = self._get_data_per_year()
+        self._data["daily"] = self._get_data_per_day((today - relativedelta(days=7)).strftime("%d/%m/%Y"),
+                                                     today.strftime("%d/%m/%Y"))
 
     def get_data(self):
         return self._data
